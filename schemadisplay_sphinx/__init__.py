@@ -13,35 +13,48 @@
 #    under the License.
 
 import os
+from sets import Set
 import sys
 
 from sqlalchemy_schemadisplay import create_uml_graph
 from sqlalchemy.orm import class_mapper
 
-def build_finished_handler(app, exception):
-    app.info("Creating the db schema")
+def builder_inited_handler(app):
+
+    def is_valid_folder(folder, skip_folders):
+        for skip_folder in skip_folders:
+             if skip_folder in folder: return False
+        return True
+
     skip_folders = ""
     if app.config.model_skip_folders:
         skip_folders = app.config.model_skip_folders.split(",")
 
-    for root, directories, filenames in os.walk(os.getcwd()):
-        for filename in filenames:
-             folder = str(root)
-             if not folder in skip_folders: continue
-             if filename.endswith(".py"):
-                 if filename.startswith("__") : continue
-                 name = filename[:-3]
-                 module = folder.replace("/", ".") + "." + name
-                 try:
-                     globals()[name] = __import__(module)
-                 except:
-                     pass
-
     str_model_cls = app.config.model_class_name
     if not str_model_cls: return
+    __import__(str_model_cls[:str_model_cls.rfind(".")])
     model_class = getattr(sys.modules[str_model_cls[:str_model_cls.rfind(".")]],
                           str_model_cls[str_model_cls.rfind(".")+1:])
-    
+
+    app.info("Importing modules")
+    cwd = os.getcwd()
+    modules = Set()
+    for root, directories, filenames in os.walk(cwd):
+        for filename in filenames:
+             folder = str(root)
+             if not is_valid_folder(folder, skip_folders): continue
+             if filename.endswith(".py") and not filename.startswith("__"):
+                 name = filename[:-2]
+                 module =  "%s.%s" % (folder.replace(cwd, '').replace("/", "."), name)
+                 modules.add(module[1:-1])
+
+    for module in modules:
+        try:
+             __import__(module)
+        except:
+             pass
+
+    app.info("Getting mappers")
     mappers = []
     for cls in model_class.__subclasses__():
         for attr in cls.__dict__.keys():
@@ -50,6 +63,7 @@ def build_finished_handler(app, exception):
             except:
                 pass
 
+    app.info("Creating the db schema")
     graph = create_uml_graph(mappers,
         show_operations=False,
         show_multiplicity_one=False
@@ -59,5 +73,5 @@ def build_finished_handler(app, exception):
 def setup(app):
     app.add_config_value('model_class_name', '', 'html')
     app.add_config_value('model_schema_filename', 'db-schema.png', 'html')
-    app.add_config_value('model_skip_folders', 'tests', 'html')
-    app.connect('build-finished', build_finished_handler)
+    app.add_config_value('model_skip_folders', '', 'html')
+    app.connect('builder-inited', builder_inited_handler)
