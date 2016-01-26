@@ -1,8 +1,12 @@
 *~
 *.swp
 *.pyc
-*.egg-info
+*.egg*
+*~
+.project
+.pydevproject
 AUTHORS
+build/*
 ChangeLog
-build/
-.eggs/
+dist/*
+MANIFEST
