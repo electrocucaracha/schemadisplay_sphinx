@@ -3,11 +3,11 @@ Schemadisplay Sphinx Extension
 ==============================
 
 .. image:: https://img.shields.io/pypi/v/schemadisplay-sphinx.svg
-       :target: https://pypi.python.org/pypi/schemadisplay-sphinx/
+    :target: https://pypi.python.org/pypi/schemadisplay-sphinx/
     :alt: Latest Version
 
 .. image:: https://img.shields.io/pypi/dm/schemadisplay-sphinx.svg
-       :target: https://pypi.python.org/pypi/schemadisplay-sphinx/
+    :target: https://pypi.python.org/pypi/schemadisplay-sphinx/
     :alt: Downloads
 
 This extension creates the Entitiy Relationship Diagram(ERD) of the
